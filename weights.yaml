@@ -1,0 +1,5 @@
+files:
+  - repo: arena-rosnav/drlvo
+    filename: drl_vo.zip
+    dest: model/drl_vo.zip
+    sha256: 78a6bc9918b092e2bd26782664248d9ce06a5498e7cd086260dbfe6548f99645
