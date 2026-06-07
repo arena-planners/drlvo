@@ -1,4 +1,5 @@
 action_type: differential_drive
+sensor_needs: [laserscan]
 obs_policy: lossless
 
 depends:

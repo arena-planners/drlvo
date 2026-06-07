@@ -11,7 +11,7 @@ from arena_planners.sdk import load_manifest, main_loop
 
 from policy import DrlVoPolicy
 
-_WEIGHTS = os.path.join(os.path.dirname(__file__), "model", "drl_vo.zip")
+_WEIGHTS = os.path.join(os.path.dirname(__file__), "model", "drl_vo")
 
 _RANGE_LIMIT: float = 30.0
 _VX_LIMIT: float = 0.5
