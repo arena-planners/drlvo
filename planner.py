@@ -6,7 +6,6 @@ import os
 import pathlib
 
 import numpy as np
-from arena_planners.geometry import lookahead_on_path, world_to_robot_frame
 from arena_planners.sdk import load_manifest, main_loop
 
 from policy import DrlVoPolicy
@@ -56,18 +55,10 @@ def step(features: dict) -> list[float]:
     scan_history = [v for frame in _scan_history_buffer for v in frame]
 
     robot_pose = features.get("robot_pose")
-    global_plan = features.get("global_plan")
     goal_pose = features.get("goal_pose")
 
-    target_world: tuple[float, float] | None = None
-    if robot_pose is not None and global_plan is not None and len(robot_pose) >= 3 and len(global_plan) > 0:
-        target_world = lookahead_on_path(global_plan, robot_pose, lookahead=_GOAL_MAX_DIST)
-
     sub_goal_rf: tuple[float, float] | None = None
-    if target_world is not None and robot_pose is not None:
-        sub_goal_rf = world_to_robot_frame(target_world, robot_pose)
-
-    if sub_goal_rf is None and robot_pose is not None and goal_pose is not None and len(robot_pose) >= 3 and len(goal_pose) >= 2:
+    if robot_pose is not None and goal_pose is not None and len(robot_pose) >= 3 and len(goal_pose) >= 2:
         dx = float(goal_pose[0] - robot_pose[0])
         dy = float(goal_pose[1] - robot_pose[1])
         theta = float(robot_pose[2])
