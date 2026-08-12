@@ -1,6 +1,7 @@
 action_type: differential_drive
 sensor_needs: [laserscan]
 obs_policy: lossless
+controls_orientation: false
 
 depends:
   global_plan: true
