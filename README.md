@@ -5,7 +5,7 @@ Arena wrapper for the **DRL-VO** (Velocity Obstacle) navigator. Adapted from [Te
 ## Run
 
 ```sh
-arena launch mobile:=drl mobile.planner:=drlvo
+arena launch robot.mobile:=drl robot.mobile.planner:=drlvo
 ```
 
 Requires a global plan. Defaults to `nav2/navfn`.
