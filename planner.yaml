@@ -20,6 +20,7 @@ observations:
       type: sensor_msgs/LaserScan
       params:
         sensor: laserscan
+        canonical_beams: 720
 
     pedestrians:
       type: arena_people_msgs/Pedestrians

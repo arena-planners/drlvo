@@ -266,8 +266,7 @@ class DrlVoPolicy:
                 int(len_scan / 2 - len_scan / 9) : int(len_scan / 2 + len_scan / 9)
             ]
         )
-        scan_nonzero = scan_arr[scan_arr != 0]
-        min_scan_dist = float(np.amin(scan_nonzero)) if scan_nonzero.size != 0 else 30.0
+        min_scan_dist = float(np.amin(scan_arr)) if scan_arr.size != 0 else 30.0
 
         if min_scan_dist <= 0.45:
             return 0.0, self.wz_limit
