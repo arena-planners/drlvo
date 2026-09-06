@@ -43,7 +43,9 @@ def step(features: dict) -> list[float]:
 
     scan_raw = features.get("laser_scan")
     if scan_raw is not None and len(scan_raw) > 0:
-        current_scan = np.asarray(scan_raw, dtype=np.float32).tolist()
+        # canonical scan is heading-first, the policy expects the heading at len/2
+        canonical = np.asarray(scan_raw, dtype=np.float32)
+        current_scan = np.roll(canonical, canonical.size // 2).tolist()
     else:
         current_scan = [_RANGE_LIMIT] * _SCAN_BEAMS
 
