@@ -5,7 +5,7 @@ description = "DRL-VO planner adapter for arena_planners bridge."
 requires-python = ">=3.10,<3.11"
 dependencies = [
     "arena_planners",
-    "torch==1.11.0",
+    "torch>=2.14,<2.15",
     "stable-baselines3==1.1.0",
     "gym==0.23.1",
     "numpy<2",
