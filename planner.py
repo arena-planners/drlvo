@@ -18,6 +18,31 @@ _WZ_LIMIT: float = 0.7
 _SCAN_BEAMS: int = 720
 _SCAN_HISTORY_LEN: int = 10
 _GOAL_MAX_DIST: float = 2.0
+_ARRIVE_R: float = 1.0
+_STOP_R: float = 0.2
+_PLAN_END_EPS: float = 0.05
+_PED_CELL: float = 0.25
+
+
+def ped_velocity_map(
+    peds: np.ndarray | None, robot_pose: np.ndarray | None
+) -> np.ndarray:
+    """(2, 80, 80) robot-frame pedestrian velocity map, built as DRL-VO's cnn_data_pub.ped_callback."""
+    m = np.zeros((2, 80, 80), dtype=np.float32)
+    if peds is None or len(peds) == 0 or robot_pose is None or len(robot_pose) < 3:
+        return m
+    rx, ry, th = float(robot_pose[0]), float(robot_pose[1]), float(robot_pose[2])
+    c_, s_ = np.cos(-th), np.sin(-th)
+    for _, px, py, vx, vy in np.asarray(peds, dtype=np.float64)[:, :5]:
+        dx, dy = px - rx, py - ry
+        x, y = c_ * dx - s_ * dy, s_ * dx + c_ * dy
+        if 0.0 <= x <= 20.0 and abs(y) <= 10.0:
+            r = min(int(np.floor(x / _PED_CELL)), 79)
+            c = min(int(np.floor(-(y - 10.0) / _PED_CELL)), 79)
+            m[0, r, c] = c_ * vx - s_ * vy
+            m[1, r, c] = s_ * vx + c_ * vy
+    return m
+
 
 _policy: DrlVoPolicy | None = None
 
@@ -35,6 +60,16 @@ def _get_policy() -> DrlVoPolicy:
 
 
 _scan_history_buffer: list[list[float]] = []
+
+
+def _at_plan_end(goal_pose: np.ndarray, plan: np.ndarray | None) -> bool:
+    """True when the subgoal is the last plan point, or no plan exists and the subgoal is the goal itself."""
+    if plan is None or len(plan) == 0:
+        return True
+    return (
+        float(np.hypot(goal_pose[0] - plan[-1][0], goal_pose[1] - plan[-1][1]))
+        < _PLAN_END_EPS
+    )
 
 
 def step(features: dict) -> list[float]:
@@ -73,10 +108,28 @@ def step(features: dict) -> list[float]:
 
     sub_goal = [sub_goal_rf[0], sub_goal_rf[1]] if sub_goal_rf is not None else [0.0, 0.0]
 
+    if (
+        sub_goal_rf is not None
+        and dist <= _ARRIVE_R
+        and _at_plan_end(goal_pose, features.get("global_plan"))
+    ):
+        if dist <= _STOP_R:
+            return [0.0, 0.0]
+        wz = float(np.clip(1.5 * angle, -_WZ_LIMIT, _WZ_LIMIT))
+        vx = float(np.clip(0.5 * dist, 0.0, 0.3) * max(0.0, np.cos(angle)))
+        n = len(current_scan)
+        if (
+            min(current_scan[int(n / 2 - n / 9) : int(n / 2 + n / 9)] or [_RANGE_LIMIT])
+            <= 0.45
+        ):
+            vx = 0.0
+        return [vx, wz]
+
     vx, wz = policy.compute_velocity_commands(
         scan_history=scan_history,
         current_scan=current_scan,
         sub_goal=sub_goal,
+        ped_map=ped_velocity_map(features.get("pedestrians"), robot_pose),
     )
     return [vx, wz]
 

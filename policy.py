@@ -258,8 +258,9 @@ class DrlVoPolicy:
         scan_history: list[float],
         current_scan: list[float],
         sub_goal: list[float],
+        ped_map: np.ndarray | None = None,
     ) -> tuple[float, float]:
-        """Return (vx, wz) from scan history, current scan, and sub-goal."""
+        """Return (vx, wz) from scan history, current scan, sub-goal and the (2, 80, 80) pedestrian velocity map."""
         len_scan = len(current_scan)
         scan_arr = np.array(
             current_scan[
@@ -271,7 +272,12 @@ class DrlVoPolicy:
         if min_scan_dist <= 0.45:
             return 0.0, self.wz_limit
 
-        ped_map = np.zeros(12800, dtype=np.float32)
+        if ped_map is None:
+            ped_map = np.zeros(12800, dtype=np.float32)
+        else:
+            ped_map = (np.asarray(ped_map, dtype=np.float32).reshape(12800) / 2.0).clip(
+                -1.0, 1.0
+            )
 
         temp = np.array(scan_history, dtype=np.float32)
         scan_avg = np.zeros((20, 80), dtype=np.float32)
